@@ -17,8 +17,8 @@
 
 ## 🔗 Live Demo
 
-👉 [https://subzero-app.vercel.app/](https://subzero-app.vercel.app)\
-🎥 [Demo Coming Soon]
+👉 [https://subzero-app.vercel.app/](https://sub-zero-eta-app.vercel.app)
+🎥[Watch Demo on YouTube](https://www.youtube.com/watch?v=Px35EOXV80E)
 
 ---
 
