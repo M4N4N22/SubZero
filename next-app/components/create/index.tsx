@@ -23,6 +23,7 @@ const CreatePlan = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   const [formData, setFormData] = useState({
+    planId: "",
     planName: "",
     description: "",
     token: "",
@@ -88,8 +89,8 @@ const CreatePlan = () => {
     formData.frequency;
 
   return (
-    <div className="min-h-screen py-8">
-      <div className="container mx-auto px-4 max-w-2xl">
+    <div className="min-h-screen ">
+      <div className="container mx-auto  max-w-2xl">
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-foreground mb-2">
@@ -212,6 +213,12 @@ const CreatePlan = () => {
                         </h3>
                         <div className="space-y-1 text-sm">
                           <p>
+                            <span className="text-muted-foreground hidden">
+                              Plan ID:
+                            </span>{" "}
+                            {formData.planId}
+                          </p>
+                          <p>
                             <span className="text-muted-foreground">Name:</span>{" "}
                             {formData.planName}
                           </p>
@@ -275,6 +282,7 @@ const CreatePlan = () => {
               <CardTitle className="text-green-600">🎉 Plan Created</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
+             
               <p className="text-sm text-muted-foreground">
                 Your plan is live! Share this link with your audience:
               </p>
