@@ -10,7 +10,7 @@ export function createPlan(
   frequency: string,
   createdAt: string,
 ): void {
-  const creator = Context.caller().toString();
+  const creator = Context.caller().toString().toLowerCase();
 
   // Use a delimited string to reduce size instead of JSON
   const data = `${planName}|${description}|${token}|${amount}|${frequency}|${creator}|${createdAt}`;
@@ -35,7 +35,10 @@ export function createPlan(
 
 export function getPlansByCreator(args: StaticArray<u8>): StaticArray<u8> {
   const params = new Args(args);
-  const creator = params.nextString().expect("Missing creator address");
+  const creator = params
+    .nextString()
+    .expect('Missing creator address')
+    .toLowerCase();
 
   const countKey = 'creatorPlanCount:' + creator;
   if (!Storage.has(countKey)) {
@@ -62,6 +65,7 @@ export function getPlansByCreator(args: StaticArray<u8>): StaticArray<u8> {
     const frequency = parts[4];
 
     encoded
+      .add(planId)
       .add(planName)
       .add(frequency)
       .add(0 as u32) // Placeholder
@@ -71,13 +75,11 @@ export function getPlansByCreator(args: StaticArray<u8>): StaticArray<u8> {
   return encoded.serialize();
 }
 
-
-
 // ------------------ GET PLAN BY ID ------------------
 
 export function getPlanById(args: StaticArray<u8>): StaticArray<u8> {
   const params = new Args(args);
-  const planId = params.nextString().expect("Missing planId");
+  const planId = params.nextString().expect('Missing planId');
 
   const key = 'plan:' + planId;
   if (!Storage.has(key)) {
@@ -85,9 +87,9 @@ export function getPlanById(args: StaticArray<u8>): StaticArray<u8> {
   }
 
   const planData = Storage.get(key);
-if (planData === null) {
-  return new StaticArray<u8>(0);
-}
+  if (planData === null) {
+    return new StaticArray<u8>(0);
+  }
 
   const parts = planData.split('|');
   if (parts.length < 7) {
@@ -105,4 +107,3 @@ if (planData === null) {
 
   return encoded.serialize();
 }
-

@@ -41,7 +41,7 @@ export const callCreatePlan = async ({
     fee: 10_000_000, // in nanoMAS
     maxGas: 100_000_000, // gas limit
     coins: 0, // attach MAS if needed
-    targetAddress: "AS128bXDwAasHieMrCXDGgjZSeQFi3fQ6kzA4JbqJvHDKKq2k4Csd",
+    targetAddress: "AS12jozNQsyMUTbohLjaBpbByYaTdWXJq1XraU5CdpbY4dxdJfhcG",
     functionName: "createPlan",
     unsafeParameters: args.serialize(), // use Args directly
   });

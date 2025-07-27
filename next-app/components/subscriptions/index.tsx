@@ -24,11 +24,11 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen  ">
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto ">
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 space-y-4 sm:space-y-0">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
+            <h1 className="text-3xl font-bold text-foreground">Your Subscriptions</h1>
             <p className="text-muted-foreground">
               Manage your autonomous subscriptions
             </p>

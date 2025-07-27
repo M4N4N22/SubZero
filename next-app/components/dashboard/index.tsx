@@ -47,7 +47,7 @@ const CreatorDashboard = () => {
 
   return (
     <div className="min-h-screen">
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto ">
         <div className="mb-10 flex flex-col sm:flex-row justify-between items-start sm:items-center">
           <div>
             <h1 className="text-3xl font-bold text-foreground mb-1">

@@ -2,6 +2,7 @@ import { web3 } from "@hicaru/bearby.js";
 import { Args } from "@massalabs/massa-web3";
 
 type CreatorPlan = {
+  id: string;
   name: string;
   frequency: string;
   subscribers: number;
@@ -17,15 +18,16 @@ export const getCreatorPlans = async (
     throw new Error("Bearby wallet is not connected");
   }
 
-  console.log("📡 Sending SC read request for creator:", creatorAddress);
+  const addressNormalized = creatorAddress.toLowerCase(); // ⬅️ normalize here
+  console.log("📡 Sending SC read request for creator:", addressNormalized);
 
   const response = await web3.contract.readSmartContract({
-    targetAddress: "AS128bXDwAasHieMrCXDGgjZSeQFi3fQ6kzA4JbqJvHDKKq2k4Csd",
+    targetAddress: "AS12jozNQsyMUTbohLjaBpbByYaTdWXJq1XraU5CdpbY4dxdJfhcG",
     targetFunction: "getPlansByCreator",
     parameter: [
       {
         type: web3.contract.types.STRING,
-        value: creatorAddress,
+        value: addressNormalized,
       },
     ],
     maxGas: 3_000_000,
@@ -53,22 +55,21 @@ export const getCreatorPlans = async (
     return [];
   }
 
-  console.log("📜 Decoding Args buffer:", result.Ok);
-
   const buffer = Uint8Array.from(result.Ok);
   const args = new Args(buffer);
   const plans: CreatorPlan[] = [];
 
   try {
     while (true) {
+      const id = args.nextString();            // ⬅️ new
       const name = args.nextString();
       const frequency = args.nextString();
       const subscribers = Number(args.nextU32());
       const revenue = args.nextString();
 
-      console.log("✅ Plan decoded:", { name, frequency, subscribers, revenue });
+      console.log("✅ Plan decoded:", { id, name, frequency, subscribers, revenue });
 
-      plans.push({ name, frequency, subscribers, revenue });
+      plans.push({ id, name, frequency, subscribers, revenue });
     }
   } catch {
     console.log("✅ Finished reading buffer / End of Args reached");
