@@ -19,7 +19,7 @@ export const getPlanById = async (
   }
 
   const response = await web3.contract.readSmartContract({
-    targetAddress: "AS12jozNQsyMUTbohLjaBpbByYaTdWXJq1XraU5CdpbY4dxdJfhcG", // Your smart contract address
+    targetAddress: "AS1rfsTZL779jUCdeoQ3g3eyXcM12Z5URtRxMFva3Bzk9ZvSJHqu",
     targetFunction: "getPlanById",
     parameter: [
       {
