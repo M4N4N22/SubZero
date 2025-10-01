@@ -37,7 +37,7 @@ export const Header = () => {
               <NavigationMenuList className="flex  gap-2 mt-2">
                 <NavigationMenuItem>
                   <NavigationMenuLink
-                    className="text-muted-foreground hover:text-foreground transition-colors font-medium"
+                    className="text-muted-foreground hover:text-foreground transition-colors font-medium hidden"
                     href="/home"
                   >
                     Home
@@ -65,14 +65,6 @@ export const Header = () => {
                     href="/subscriptions"
                   >
                     My Subscriptions
-                  </NavigationMenuLink>
-                </NavigationMenuItem>
-                <NavigationMenuItem>
-                  <NavigationMenuLink
-                    className="text-muted-foreground hover:text-foreground transition-colors font-medium"
-                    href="/explorer"
-                  >
-                    Explorer
                   </NavigationMenuLink>
                 </NavigationMenuItem>
               </NavigationMenuList>

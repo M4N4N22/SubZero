@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { useBearby } from "@/hooks/useBearby";
 import {
   Select,
   SelectContent,
@@ -17,6 +18,7 @@ import { toast } from "sonner";
 import { callCreatePlan } from "@/lib/massa/callCreatePlan";
 
 const CreatePlan = () => {
+  const { connected, address } = useBearby();
   const router = useRouter();
   const [shareableLink, setShareableLink] = useState<string | null>(null);
 
@@ -31,12 +33,7 @@ const CreatePlan = () => {
     frequency: "",
   });
 
-  const tokens = [
-    { value: "USDC", label: "USDC", icon: "" },
-    { value: "USDT", label: "USDT", icon: "" },
-    { value: "MAS", label: "MAS", icon: "" },
-    { value: "ETH", label: "ETH", icon: "" },
-  ];
+  const tokens = [{ value: "MAS", label: "MAS", icon: "" }];
 
   const frequencies = [
     { label: "Weekly (7 days)", value: "weekly" },
@@ -47,7 +44,8 @@ const CreatePlan = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const planId = "0x" + Math.random().toString(16).substring(2, 10);
+    const planId = "plan-" + Math.random().toString(36).substring(2, 10);
+
     const createdAt = new Date().toISOString();
     setIsLoading(true);
     try {
@@ -61,7 +59,7 @@ const CreatePlan = () => {
         createdAt,
       });
 
-      const planURL = `${window.location.origin}/subscribe/${planId}`;
+      const planURL = `${window.location.origin}/subscribe?creator=${address}&planId=${planId}`;
       setShareableLink(planURL);
 
       toast.success("Plan Created Successfully! 🎉", {
@@ -282,7 +280,6 @@ const CreatePlan = () => {
               <CardTitle className="text-green-600">🎉 Plan Created</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-             
               <p className="text-sm text-muted-foreground">
                 Your plan is live! Share this link with your audience:
               </p>
