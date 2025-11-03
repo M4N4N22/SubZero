@@ -23,7 +23,7 @@ export const getCreatorPlans = async (
   console.log("📡 Sending SC read request for creator:", addressNormalized);
 
   const response = await web3.contract.readSmartContract({
-    targetAddress: "AS12GNE7FDjsqQg6CGbzv65k1rmLt377cPtLSYu21y1VHCAQLnKEL",
+    targetAddress: "AS1g86F28S7N8GQ33oysd8wm6SSmNMyZxhgLJVybxLc44bM9Bvqw",
     targetFunction: "getPlansByCreator",
     parameter: [
       {

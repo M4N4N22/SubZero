@@ -2,7 +2,7 @@
 
 import CreateSubscription from "@/components/create";
 
-export default function DashboardPage() {
+export default function CreatePlan() {
   return (
     <>
       <CreateSubscription />

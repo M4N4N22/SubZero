@@ -60,7 +60,7 @@ const Landing = () => {
               plans. All trustless. All on-chain.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-6">
-              <Link href="/dashboard">
+              <Link href="/creator/dashboard">
                 <Button variant="default" size="lg" className="min-w-[200px]">
                   Get Started
                 </Button>

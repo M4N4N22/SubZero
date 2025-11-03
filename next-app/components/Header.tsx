@@ -6,16 +6,11 @@ const WalletButton = dynamic(() => import("./WalletButton"), { ssr: false });
 import Link from "next/link";
 import { ModeToggle } from "./ThemeToggle";
 
-import {
-  NavigationMenu,
-  NavigationMenuItem,
-  NavigationMenuList,
-  NavigationMenuLink,
-} from "@/components/ui/navigation-menu";
+
 
 export const Header = () => {
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-card backdrop-blur-md px-40 shadow-lg">
+    <header className="fixed top-0 left-0 right-0 z-0 bg-card backdrop-blur-md pr-24  shadow-sm">
       <div className="container mx-auto px-6 py-4">
         <div className="flex justify-between items-start">
           {/* Left: Logo + NavigationMenu (stacked vertically) */}
@@ -28,47 +23,11 @@ export const Header = () => {
                     S
                   </span>
                 </div>
-                <span className="text-xl font-semibold">SubZero</span>
+                <span className="text-xl font-semibold text-foreground">SubZero</span>
               </div>
             </Link>
 
-            {/* NavigationMenu */}
-            <NavigationMenu>
-              <NavigationMenuList className="flex  gap-2 mt-2">
-                <NavigationMenuItem>
-                  <NavigationMenuLink
-                    className="text-muted-foreground hover:text-foreground transition-colors font-medium hidden"
-                    href="/home"
-                  >
-                    Home
-                  </NavigationMenuLink>
-                </NavigationMenuItem>
-                <NavigationMenuItem>
-                  <NavigationMenuLink
-                    className="text-muted-foreground hover:text-foreground transition-colors font-medium"
-                    href="/dashboard"
-                  >
-                    Dashboard
-                  </NavigationMenuLink>
-                </NavigationMenuItem>
-                <NavigationMenuItem>
-                  <NavigationMenuLink
-                    className="text-muted-foreground hover:text-foreground transition-colors font-medium"
-                    href="/create"
-                  >
-                    Create Plan
-                  </NavigationMenuLink>
-                </NavigationMenuItem>
-                <NavigationMenuItem>
-                  <NavigationMenuLink
-                    className="text-muted-foreground hover:text-foreground transition-colors font-medium"
-                    href="/subscriptions"
-                  >
-                    My Subscriptions
-                  </NavigationMenuLink>
-                </NavigationMenuItem>
-              </NavigationMenuList>
-            </NavigationMenu>
+    
           </div>
 
           {/* Right: Theme toggle & WalletButton */}
