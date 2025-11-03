@@ -7,6 +7,9 @@ export function useSubscriptionStatus(planId: string, scAddress: string) {
   const [subscribed, setSubscribed] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [refreshFlag, setRefreshFlag] = useState(0);
+
+  const refresh = () => setRefreshFlag((prev) => prev + 1);
 
   useEffect(() => {
     if (!planId || !scAddress) return;
@@ -31,7 +34,9 @@ export function useSubscriptionStatus(planId: string, scAddress: string) {
 
         // Deserialize response
         const subsString = bytesToStr(result.value);
-        const subscribers = subsString ? subsString.split("|") : [];
+        const subscribers = subsString
+          ? subsString.split("|").map((s) => s.toLowerCase())
+          : [];
 
         setSubscribed(subscribers.includes(userAddress));
       } catch (err: any) {
@@ -43,7 +48,7 @@ export function useSubscriptionStatus(planId: string, scAddress: string) {
     };
 
     fetchStatus();
-  }, [planId, scAddress]);
+  }, [planId, scAddress, refreshFlag]);
 
-  return { subscribed, loading, error };
+  return { subscribed, loading, error, refresh };
 }

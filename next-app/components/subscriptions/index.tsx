@@ -6,7 +6,7 @@ import SubscriptionCard from "@/components/SubscriptionCard";
 import Link from "next/link";
 import { useMySubscriptions } from "@/lib/massa/useMySubscriptions";
 
-const SC_ADDRESS = "AS12GNE7FDjsqQg6CGbzv65k1rmLt377cPtLSYu21y1VHCAQLnKEL";
+const SC_ADDRESS = "AS1g86F28S7N8GQ33oysd8wm6SSmNMyZxhgLJVybxLc44bM9Bvqw";
 
 const Dashboard = () => {
   const { subscriptions, totalMonthly, upcomingPayments, loading, error } =
@@ -39,11 +39,7 @@ const Dashboard = () => {
       {!loading && !error && (
         <>
           <div className="relative min-h-screen rounded-3xl">
-            <div className="absolute inset-0 bg-background/50 backdrop-blur-xl z-50 flex items-center justify-center rounded-3xl">
-              <h1 className="text-4xl font-bold text-white text-center">
-               In Development
-              </h1>
-            </div>
+       
             {/* Stats Overview */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
               <Card>

@@ -18,7 +18,9 @@ export function useMySubscriptions(scAddress: string) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [totalMonthly, setTotalMonthly] = useState(0);
-  const [upcomingPayments, setUpcomingPayments] = useState<MySubscription[]>([]);
+  const [upcomingPayments, setUpcomingPayments] = useState<MySubscription[]>(
+    []
+  );
 
   useEffect(() => {
     if (!scAddress) return;
@@ -39,7 +41,7 @@ export function useMySubscriptions(scAddress: string) {
         const contract = new SmartContract(accounts[0], scAddress);
         console.log("Smart contract instance created at:", scAddress);
 
-        // 1️⃣ Get user's plan IDs
+        // Get user's plan IDs
         const userSubsRaw = await contract.read(
           "getUserSubscriptions",
           new Args().addString(user)
@@ -50,7 +52,7 @@ export function useMySubscriptions(scAddress: string) {
         const planIds = userSubsStr ? userSubsStr.split("|") : [];
         console.log("Parsed plan IDs:", planIds);
 
-        // 2️⃣ Fetch details for each plan
+        // Fetch details for each plan
         const subs: MySubscription[] = await Promise.all(
           planIds.map(async (planId) => {
             const planRaw = await contract.read(
@@ -69,17 +71,28 @@ export function useMySubscriptions(scAddress: string) {
             const paused = bytesToStr(pausedRaw.value) === "true";
 
             // subscription start timestamp
-            const tsRaw = await contract.read(
+            // subscription start timestamp
+            const timestampRaw = await contract.read(
               "getSubscriberTimestamp",
               new Args().addString(planId).addString(user)
             );
-            const createdAt = bytesToStr(tsRaw.value) || new Date().toISOString();
+            const createdAtRaw = bytesToStr(timestampRaw.value);
+
+            // safely convert timestamp → ISO string
+            let createdAt: string;
+            if (createdAtRaw && !isNaN(Number(createdAtRaw))) {
+              createdAt = new Date(Number(createdAtRaw)).toISOString();
+            } else {
+              createdAt = new Date().toISOString(); // fallback
+            }
 
             // calculate next payment
             const frequency = planData[4]; // e.g., "monthly"
             let nextPayment = new Date(createdAt);
-            if (frequency === "monthly") nextPayment.setMonth(nextPayment.getMonth() + 1);
-            else if (frequency === "weekly") nextPayment.setDate(nextPayment.getDate() + 7);
+            if (frequency === "monthly")
+              nextPayment.setMonth(nextPayment.getMonth() + 1);
+            else if (frequency === "weekly")
+              nextPayment.setDate(nextPayment.getDate() + 7);
 
             return {
               planId,
@@ -103,7 +116,7 @@ export function useMySubscriptions(scAddress: string) {
         console.log("Total monthly commitment:", total);
         setTotalMonthly(total);
 
-        // 4️⃣ Upcoming payments (next 7 days)
+        // 4Upcoming payments (next 7 days)
         const upcoming = subs.filter((s) => {
           const next = new Date(s.nextPayment);
           const now = new Date();

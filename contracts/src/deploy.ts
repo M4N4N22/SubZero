@@ -12,7 +12,7 @@ async function deployAndVerifyContract(): Promise<string> {
   const account = await Account.fromEnv();
   const provider = JsonRpcProvider.buildnet(account);
 
-  console.log('🚀 Deploying contract...');
+  console.log('Deploying contract...');
 
   // Load WASM bytecode
   const byteCode = getScByteCode('build', 'main.wasm');
@@ -53,9 +53,9 @@ async function deployAndVerifyContract(): Promise<string> {
       maxGas: 100_000_000n,
       coins: 0n,
     });
-    console.log('✅ createPlan verified: accepts 7 string arguments');
+    console.log('createPlan verified: accepts 7 string arguments');
   } catch (err) {
-    console.error('❌ createPlan verification failed:', err);
+    console.error('createPlan verification failed:', err);
     throw new Error(
       'Deployed contract does not have createPlan with 7 string arguments'
     );
@@ -66,7 +66,7 @@ async function deployAndVerifyContract(): Promise<string> {
 
 // Execute
 deployAndVerifyContract()
-  .then(address => console.log('✅ Verified contract address:', address))
+  .then(address => console.log('Verified contract address:', address))
   .catch(err => {
     console.error('Deployment/verification failed:', err);
     process.exit(1);

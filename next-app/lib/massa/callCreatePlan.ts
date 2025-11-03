@@ -37,7 +37,7 @@ export const callCreatePlan = async (params: {
   // Initialize contract
   const contract = new SmartContract(
     provider,
-    "AS12GNE7FDjsqQg6CGbzv65k1rmLt377cPtLSYu21y1VHCAQLnKEL"
+    "AS1g86F28S7N8GQ33oysd8wm6SSmNMyZxhgLJVybxLc44bM9Bvqw"
   );
   console.log("Smart contract initialized:", contract.address);
 

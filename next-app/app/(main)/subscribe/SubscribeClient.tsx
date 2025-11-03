@@ -20,9 +20,8 @@ type CreatorPlan = {
   createdAt: string;
 };
 
-const SC_ADDRESS = "AS12GNE7FDjsqQg6CGbzv65k1rmLt377cPtLSYu21y1VHCAQLnKEL";
+const SC_ADDRESS = "AS1g86F28S7N8GQ33oysd8wm6SSmNMyZxhgLJVybxLc44bM9Bvqw";
 
-// Child card for each plan
 function PlanCard({
   plan,
   handleAction,
@@ -31,13 +30,28 @@ function PlanCard({
   handleAction: (
     planId: string,
     action: "subscribe" | "pause" | "cancel",
-    amount?: string
+    amount?: string,
+    refresh?: () => void
   ) => void;
 }) {
-  const { subscribed, loading, error } = useSubscriptionStatus(
+  const { subscribed, loading, error, refresh } = useSubscriptionStatus(
     plan.planId,
     SC_ADDRESS
   );
+
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  const handleClick = async (
+    action: "subscribe" | "cancel",
+    amount?: string
+  ) => {
+    try {
+      setIsProcessing(true);
+      await handleAction(plan.planId, action, amount, refresh);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
 
   return (
     <Card className="hover:shadow-lg transition-shadow">
@@ -45,18 +59,27 @@ function PlanCard({
         <CardTitle className="text-xl font-semibold">{plan.planName}</CardTitle>
       </CardHeader>
       <CardContent>
-        {plan.description && <p className="mb-2 text-gray-700">{plan.description}</p>}
-        <p className="mb-1"><strong>Amount:</strong> {plan.amount} MAS</p>
-        <p className="mb-4"><strong>Renewal:</strong> {plan.frequency}</p>
+        {plan.description && (
+          <p className="mb-2 text-gray-700">{plan.description}</p>
+        )}
+        <p className="mb-1">
+          <strong>Amount:</strong> {plan.amount} MAS
+        </p>
+        <p className="mb-4">
+          <strong>Renewal:</strong> {plan.frequency}
+        </p>
 
         <div className="flex flex-col gap-2">
-          {loading ? (
+        {loading ? (
             <p>Checking subscription...</p>
           ) : error ? (
             <p className="text-red-500">Error: {error}</p>
           ) : !subscribed ? (
-            <Button onClick={() => handleAction(plan.planId, "subscribe", plan.amount)}>
-              Subscribe
+            <Button
+              disabled={isProcessing}
+              onClick={() => handleClick("subscribe", plan.amount)}
+            >
+              {isProcessing ? "Processing your request, hold on..." : "Subscribe"}
             </Button>
           ) : (
             <>
@@ -65,7 +88,9 @@ function PlanCard({
               </p>
               <Button
                 variant="destructive"
-                onClick={() => toast.info("Wait 24hrs before cancelling subscription")}
+                onClick={() =>
+                  handleAction(plan.planId, "cancel", undefined, refresh)
+                }
               >
                 Cancel Subscription
               </Button>
@@ -87,9 +112,12 @@ export default function SubscribeClient() {
 
   const { manageSubscription, error: txError } = useSubscriptionManager();
 
-  // Fetch plans
   useEffect(() => {
-    if (!creatorAddress) return;
+    if (!creatorAddress) {
+      setLoading(false);
+      setError("No creator address provided in URL");
+      return;
+    }
 
     const fetchPlans = async () => {
       setLoading(true);
@@ -110,34 +138,61 @@ export default function SubscribeClient() {
   const handleAction = async (
     planId: string,
     action: "subscribe" | "pause" | "cancel",
-    amount?: string
+    amount?: string,
+    refresh?: () => void
   ) => {
     try {
       await manageSubscription(planId, action, amount);
-      toast.success(`${action} successful!`);
+      toast.success(`${action === "subscribe" ? "Subscribed" : "Cancelled"} successfully!`);
+      refresh?.(); // Refresh subscription status
     } catch (err: any) {
       console.error(err);
-      toast.error(`Failed to ${action} plan: ${err.message}`);
+      toast.error(
+        err.message
+          ? `Failed to ${action} plan: ${err.message}`
+          : `Unable to ${action} at the moment`
+      );
     }
   };
 
+  if (!creatorAddress)
+    return (
+      <div className="max-w-xl mx-auto text-center py-12">
+        <h2 className="text-2xl font-semibold">Invalid or Missing Creator</h2>
+        <p className="text-muted-foreground mt-2">
+          Please access this page with a valid <code>?creator=address</code> query.
+        </p>
+      </div>
+    );
+
   return (
-    <div className="max-w-4xl mx-auto p-4">
+    <div className="max-w-4xl mx-auto bg-card p-8 rounded-3xl">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold">Subscribe to Creator</h1>
-        <p className="text-white/50">{formatAddress(creatorAddress)}</p>
+        <h1 className="text-3xl font-bold text-foreground">Subscribe to Creator</h1>
+        <p className="text-foreground/50">{formatAddress(creatorAddress)}</p>
       </div>
 
       {loading && <p>Loading plans...</p>}
       {error && <p className="text-red-500">Error: {error}</p>}
       {txError && <p className="text-red-500">Transaction Error: {txError}</p>}
 
-      <div className="grid gap-6 md:grid-cols-1">
-        {plans.map((plan) => (
-          <PlanCard key={plan.planId} plan={plan} handleAction={handleAction} />
-        ))}
-        {!loading && plans.length === 0 && <p>No plans available.</p>}
-      </div>
+      {!loading && !error && (
+        <div className="grid gap-6 md:grid-cols-1">
+          {plans.length > 0 ? (
+            plans.map((plan) => (
+              <PlanCard
+                key={plan.planId}
+                plan={plan}
+                handleAction={handleAction}
+              />
+            ))
+          ) : (
+            <p className="text-foreground/70">
+              The creator has no active plans.
+            </p>
+          )}
+        </div>
+      )}
     </div>
   );
 }

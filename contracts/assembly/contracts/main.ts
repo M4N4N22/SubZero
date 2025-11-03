@@ -1,5 +1,5 @@
 import { Storage, Context, generateEvent } from '@massalabs/massa-as-sdk';
-import { Args,stringToBytes  } from '@massalabs/as-types';
+import { Args, stringToBytes } from '@massalabs/as-types';
 
 export function createPlan(binaryArgs: StaticArray<u8>): void {
   const args = new Args(binaryArgs);
@@ -218,5 +218,167 @@ export function getSubscribers(argsData: StaticArray<u8>): StaticArray<u8> {
   const key = 'planSubscribers:' + planId;
   const subs = Storage.has(key) ? Storage.get(key) : '';
 
-  return stringToBytes(subs); // convert string to StaticArray<u8>
+  return stringToBytes(subs); //string to StaticArray<u8>
+}
+
+export function getUserSubscriptions(
+  argsData: StaticArray<u8>,
+): StaticArray<u8> {
+  const args = new Args(argsData);
+  const user = args.nextString().expect('Missing user').toLowerCase();
+  const key = 'userSubscriptions:' + user;
+  const subs = Storage.has(key) ? Storage.get(key) : '';
+  return stringToBytes(subs);
+}
+
+export function getPlan(argsData: StaticArray<u8>): StaticArray<u8> {
+  const args = new Args(argsData);
+  const planId = args.nextString().expect('Missing planId');
+  const key = 'plan:' + planId;
+  const plan = Storage.has(key) ? Storage.get(key) : '';
+  return stringToBytes(plan);
+}
+
+export function isPaused(argsData: StaticArray<u8>): StaticArray<u8> {
+  const args = new Args(argsData);
+  const planId = args.nextString().expect('Missing planId');
+  const user = args.nextString().expect('Missing user').toLowerCase();
+  const key = 'planSubscriberPaused:' + planId + ':' + user;
+  const paused = Storage.has(key) ? Storage.get(key) : 'false';
+  return stringToBytes(paused);
+}
+
+export function getSubscriberTimestamp(
+  argsData: StaticArray<u8>,
+): StaticArray<u8> {
+  const args = new Args(argsData);
+  const planId = args.nextString().expect('Missing planId');
+  const user = args.nextString().expect('Missing user').toLowerCase();
+  const key = 'planSubscriberDate:' + planId + ':' + user;
+  const ts = Storage.has(key) ? Storage.get(key) : '';
+  return stringToBytes(ts);
+}
+
+// -------------------------------
+// CREATOR PROFILE
+// -------------------------------
+
+export function setCreatorProfile(binaryArgs: StaticArray<u8>): void {
+  const args = new Args(binaryArgs);
+  const profileCID = args.nextString().expect('Missing profileCID');
+  const creator = Context.caller().toString().toLowerCase();
+
+  // profile CID for creator
+  const profileKey = 'creatorProfile:' + creator;
+  // first profile for this creator, add to creator index
+  const indexCountKey = 'creatorCount';
+  let isNew = false;
+  if (!Storage.has(profileKey)) isNew = true;
+
+  Storage.set(profileKey, profileCID);
+  generateEvent(`ProfileSet:${creator}:${profileCID}`);
+
+  if (isNew) {
+    //creators list
+    let count = 0;
+    if (Storage.has(indexCountKey)) {
+      count = <i32>parseInt(Storage.get(indexCountKey));
+    }
+    const listKey = 'creatorList:' + count.toString();
+    Storage.set(listKey, creator);
+    Storage.set(indexCountKey, (count + 1).toString());
+  }
+}
+
+export function getCreatorProfile(argsData: StaticArray<u8>): StaticArray<u8> {
+  const params = new Args(argsData);
+  const creator = params
+    .nextString()
+    .expect('Missing creator address')
+    .toLowerCase();
+
+  const profileKey = 'creatorProfile:' + creator;
+  if (!Storage.has(profileKey)) {
+    return new StaticArray<u8>(0);
+  }
+  const cid = Storage.get(profileKey);
+  return stringToBytes(cid);
+}
+
+export function getCreatorCount(_: StaticArray<u8>): StaticArray<u8> {
+  const key = 'creatorCount';
+  const count = Storage.has(key) ? Storage.get(key) : '0';
+  return stringToBytes(count);
+}
+
+export function getCreatorByIndex(argsData: StaticArray<u8>): StaticArray<u8> {
+  const params = new Args(argsData);
+  const idxStr = params.nextString().expect('Missing index'); //index as string
+  const key = 'creatorList:' + idxStr;
+  if (!Storage.has(key)) return new StaticArray<u8>(0);
+  const creator = Storage.get(key);
+  return stringToBytes(creator);
+}
+
+// -------------------------------
+// CREATOR CONTENT
+// -------------------------------
+
+export function addCreatorContent(binaryArgs: StaticArray<u8>): void {
+  const args = new Args(binaryArgs);
+  const contentCID = args.nextString().expect('Missing contentCID');
+  const creator = Context.caller().toString().toLowerCase();
+
+  const countKey = 'contentCount:' + creator;
+  let count = 0;
+  if (Storage.has(countKey)) {
+    count = <i32>parseInt(Storage.get(countKey));
+  }
+
+  const key = 'creatorContent:' + creator + ':' + count.toString();
+  Storage.set(key, contentCID);
+  Storage.set(countKey, (count + 1).toString());
+
+  generateEvent(`ContentAdded:${creator}:${contentCID}`);
+}
+
+// Fetch all content CIDs for a given creator
+export function getCreatorContents(argsData: StaticArray<u8>): StaticArray<u8> {
+  const params = new Args(argsData);
+  const creator = params.nextString().expect('Missing creator').toLowerCase();
+
+  const countKey = 'contentCount:' + creator;
+  if (!Storage.has(countKey)) return stringToBytes('');
+
+  const total = <i32>parseInt(Storage.get(countKey));
+  let result = '';
+
+  for (let i = 0; i < total; i++) {
+    const key = 'creatorContent:' + creator + ':' + i.toString();
+    if (Storage.has(key)) {
+      const cid = Storage.get(key);
+      result += cid + ';'; // delimiter
+    }
+  }
+
+  // Remove trailing semicolon if any
+  if (
+    result.length > 0 &&
+    result.charCodeAt(result.length - 1) == ';'.charCodeAt(0)
+  ) {
+    result = result.substring(0, result.length - 1);
+  }
+
+  return stringToBytes(result);
+}
+
+// helper get number of posts
+export function getCreatorContentCount(
+  argsData: StaticArray<u8>,
+): StaticArray<u8> {
+  const params = new Args(argsData);
+  const creator = params.nextString().expect('Missing creator').toLowerCase();
+  const key = 'contentCount:' + creator;
+  const count = Storage.has(key) ? Storage.get(key) : '0';
+  return stringToBytes(count);
 }
