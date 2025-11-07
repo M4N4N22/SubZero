@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
 import { toast } from "sonner";
+import CreatorProfile from "../creator-profile";
+import CreatorInsights from "../creator-insights";
 
 type CreatorPlan = {
   planId: string;
@@ -52,10 +54,10 @@ const CreatorDashboard = () => {
   return (
     <div className="min-h-screen">
       <div className="container mx-auto">
-        <div className="mb-10 flex flex-col sm:flex-row justify-between items-start sm:items-center">
+        <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center">
           <div>
-            <h1 className="text-3xl font-bold text-foreground mb-1">
-              Creator Dashboard
+            <h1 className="text-3xl font-semibold text-foreground mb-1">
+             Dashboard
             </h1>
             <p className="text-muted-foreground">
               Manage and track your subscription plans
@@ -71,13 +73,13 @@ const CreatorDashboard = () => {
             </Button>
           </div>
         </div>
-
+        <CreatorProfile />({address && <CreatorInsights address={address} />})
         {loading ? (
           <div className="text-muted-foreground text-center">
             Loading plans...
           </div>
         ) : createdPlans.length > 0 ? (
-          <div className="grid md:grid-cols-2 lg:grid-cols-2 gap-6">
+          <div className="grid md:grid-cols-2 lg:grid-cols-2 gap-6 mt-4">
             {createdPlans.map((plan, index) => (
               <Card key={index}>
                 <CardHeader>

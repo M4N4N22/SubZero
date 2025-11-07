@@ -6,8 +6,10 @@ import { SmartContract, Args } from "@massalabs/massa-web3";
  *
  * 1. Calls `getCreatorProfile` on-chain → gets CID
  * 2. Fetches metadata JSON via /api/fetch-ipfs-metadata → returns structured object
+ *
+ * @param refresh - Whether to force refresh and bypass cache (default: false)
  */
-export const getCreatorProfile = async () => {
+export const getCreatorProfile = async (refresh: boolean = false) => {
   try {
     // Step 1: Connect to Bearby wallet
     const wallets = await getWallets();
@@ -48,7 +50,13 @@ export const getCreatorProfile = async () => {
     console.log(" Found CID:", cid);
 
     // Step 4: Fetch IPFS metadata via your backend proxy
-    const res = await fetch(`/api/fetch-ipfs-metadata?cid=${encodeURIComponent(cid)}`);
+    const endpoint = `/api/fetch-ipfs-metadata?cid=${encodeURIComponent(cid)}${
+      refresh ? "&refresh=true" : ""
+    }`;
+
+    console.log(` Fetching metadata from: ${endpoint}`);
+
+    const res = await fetch(endpoint);
 
     if (!res.ok) {
       console.warn(" Metadata fetch failed with status:", res.status);
@@ -57,14 +65,14 @@ export const getCreatorProfile = async () => {
 
     const data = await res.json();
 
-    if (!data || data.error || !data.metadata) {
+    if (!data || data.error) {
       console.warn("ℹ️ Missing metadata or error from IPFS route:", data?.error);
       return { cid, metadata: null };
     }
 
-    console.log(" Loaded profile metadata:", data.metadata);
+    console.log(" Loaded profile metadata:", data);
 
-    return { cid, metadata: data.metadata };
+    return { cid, metadata: data };
   } catch (err: any) {
     console.error(" Error fetching creator profile:", err.message || err);
     return null;

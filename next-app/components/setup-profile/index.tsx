@@ -10,88 +10,87 @@ import { toast } from "sonner";
 import { callSetCreatorProfile } from "@/lib/massa/callSetCreatorProfile";
 import { getCreatorProfile } from "@/lib/massa/getCreatorProfile";
 import { useBearby } from "@/hooks/useBearby";
+import { RotateCcw } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
 const SetupProfile = () => {
   const { connected } = useBearby();
   const [isLoading, setIsLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
 
-  const [form, setForm] = useState<{
-    name: string;
-    bio: string;
-    avatarCid: string;
-    avatarFile?: File;
-    x: string;
-    discord: string;
-    telegram: string;
-    instagram: string;
-  }>({
+  const [form, setForm] = useState({
     name: "",
     bio: "",
     avatarCid: "",
-    avatarFile: undefined,
+    avatarFile: undefined as File | undefined,
     x: "",
     discord: "",
     telegram: "",
     instagram: "",
   });
 
+  /** Helper to fetch profile (with optional refresh) */
+  const loadProfile = async (refresh = false) => {
+    if (!connected) return;
+    setLoading(true);
+    try {
+      setRefreshing(true);
+      toast.info(refresh ? "Refreshing profile..." : "Fetching your saved profile...");
+      const profile = await getCreatorProfile(refresh);
+
+      if (!profile || !profile.metadata) {
+        toast.info("No saved profile found.");
+        setRefreshing(false);
+        return;
+      }
+
+      const metadata = profile.metadata;
+      const avatarCid = metadata.avatar?.replace("ipfs://", "") || "";
+      const socials = metadata.socials || {};
+
+      setForm({
+        name: metadata.name || "",
+        bio: metadata.bio || "",
+        avatarCid,
+        avatarFile: undefined,
+        x: socials.x || "",
+        discord: socials.discord || "",
+        telegram: socials.telegram || "",
+        instagram: socials.instagram || "",
+      });
+
+      if (avatarCid) {
+        setAvatarPreview(`https://gateway.pinata.cloud/ipfs/${avatarCid}`);
+      }
+
+      toast.success(refresh ? "Profile refreshed!" : "Profile loaded!");
+    } catch (err) {
+      console.error("Error loading profile:", err);
+      toast.error("Failed to load profile");
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
   /** Auto-fetch profile when wallet is connected */
   useEffect(() => {
-    const loadProfile = async () => {
-      if (!connected) return;
-      try {
-        toast.info("Fetching your saved profile...");
-        const profile = await getCreatorProfile();
-
-        if (!profile || !profile.metadata) {
-          toast.info("No saved profile found.");
-          return;
-        }
-
-        const metadata = profile.metadata;
-        const avatarCid = metadata.avatar?.replace("ipfs://", "") || "";
-        const socials = metadata.socials || {};
-
-        setForm((prev) => ({
-          ...prev,
-          name: metadata.name || "",
-          bio: metadata.bio || "",
-          avatarCid,
-          x: socials.x || "",
-          discord: socials.discord || "",
-          telegram: socials.telegram || "",
-          instagram: socials.instagram || "",
-        }));
-
-        if (avatarCid) {
-          setAvatarPreview(`https://gateway.pinata.cloud/ipfs/${avatarCid}`);
-        }
-
-        toast.success("Profile loaded!");
-      } catch (err) {
-        console.error("Error loading profile:", err);
-        toast.error("Failed to load profile");
-      }
-    };
-
-    loadProfile();
+    if (connected) loadProfile();
   }, [connected]);
 
-  /** Handle avatar file selection — only preview, no upload yet */
+  /** Handle avatar file selection */
   const handleAvatarSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Preview locally
     setAvatarPreview(URL.createObjectURL(file));
-
-    // Store file temporarily
     setForm((prev) => ({ ...prev, avatarFile: file }));
   };
 
-  /** Upload metadata + avatar (if selected) when saving */
+  /** Upload metadata + avatar (if selected) */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!connected) return toast.error("Connect your wallet first");
@@ -101,7 +100,7 @@ const SetupProfile = () => {
     try {
       let avatarCid = form.avatarCid;
 
-      // Upload avatar if a new one is selected
+      // Upload avatar if selected
       if (form.avatarFile) {
         setAvatarUploading(true);
         try {
@@ -116,8 +115,6 @@ const SetupProfile = () => {
           const data = await res.json();
           if (!res.ok || !data.cid) {
             toast.error("Failed to upload avatar");
-            setAvatarUploading(false);
-            setIsLoading(false);
             return;
           }
 
@@ -127,15 +124,13 @@ const SetupProfile = () => {
         } catch (error) {
           console.error(error);
           toast.error("Avatar upload failed");
-          setAvatarUploading(false);
-          setIsLoading(false);
           return;
         } finally {
           setAvatarUploading(false);
         }
       }
 
-      // Now upload profile metadata JSON to Pinata
+      // Upload profile metadata JSON
       const metadata = {
         name: form.name,
         bio: form.bio,
@@ -156,10 +151,8 @@ const SetupProfile = () => {
       });
 
       const data = await res.json();
-
       if (!res.ok || !data.cid) {
         toast.error("Failed to upload metadata to Pinata");
-        setIsLoading(false);
         return;
       }
 
@@ -167,6 +160,9 @@ const SetupProfile = () => {
       await callSetCreatorProfile(cid);
 
       toast.success("Profile saved on-chain!", { description: `CID: ${cid}` });
+
+      // ✅ Auto refresh after successful save
+      await loadProfile(true);
     } catch (err) {
       console.error(err);
       toast.error("Failed to save profile");
@@ -174,6 +170,16 @@ const SetupProfile = () => {
       setIsLoading(false);
     }
   };
+
+   // ---------- Loading State ----------
+   if (loading) {
+    return (
+      <div className="flex flex-col justify-center items-center h-[60vh] gap-2 text-muted-foreground">
+        <Loader2 className="animate-spin h-6 w-6 text-primary" />
+        <p>Loading your profile...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen py-10">
@@ -184,10 +190,24 @@ const SetupProfile = () => {
           </h1>
         </div>
 
-        <Card className="p-4 md:p-8">
-          <CardHeader className="">
+        <Card className="p-4 md:p-8 relative">
+          {/* Top-right refresh button */}
+          <div className="absolute right-4 top-4">
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={refreshing || !connected}
+              onClick={() => loadProfile(true)}
+              className="flex items-center gap-1 text-sm"
+            >
+              <RotateCcw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
+              {refreshing ? "Refreshing..." : "Refresh"}
+            </Button>
+          </div>
+
+          <CardHeader>
             <CardTitle className="text-lg font-semibold">
-           
+              Profile Details
             </CardTitle>
           </CardHeader>
 
