@@ -109,22 +109,34 @@ export function useMySubscriptions(scAddress: string) {
         console.log("Fetched subscriptions:", subs);
         setSubscriptions(subs);
 
-        // 3️⃣ Total monthly commitment
+        // 3Total monthly commitment
         const total = subs
           .filter((s) => !s.paused)
           .reduce((sum, s) => sum + parseFloat(s.amount), 0);
         console.log("Total monthly commitment:", total);
         setTotalMonthly(total);
 
-        // 4Upcoming payments (next 7 days)
-        const upcoming = subs.filter((s) => {
+        // Upcoming payments (next 7 days)
+        let upcoming = subs.filter((s) => {
           const next = new Date(s.nextPayment);
           const now = new Date();
           const in7Days = new Date();
           in7Days.setDate(now.getDate() + 7);
           return next > now && next <= in7Days && !s.paused;
         });
-        console.log("Upcoming payments in next 7 days:", upcoming);
+
+        // ✅ If none due in next 7 days, fallback to the soonest
+        if (upcoming.length === 0 && subs.length > 0) {
+          upcoming = [...subs]
+            .filter((s) => !s.paused)
+            .sort(
+              (a, b) =>
+                new Date(a.nextPayment).getTime() -
+                new Date(b.nextPayment).getTime()
+            )
+            .slice(0, 1);
+        }
+
         setUpcomingPayments(upcoming);
 
         console.log("Finished fetching subscriptions");

@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import SubscriptionCard from "@/components/SubscriptionCard";
 import Link from "next/link";
 import { useMySubscriptions } from "@/lib/massa/useMySubscriptions";
+import { Loader2 } from "lucide-react";
 
 const SC_ADDRESS = "AS1g86F28S7N8GQ33oysd8wm6SSmNMyZxhgLJVybxLc44bM9Bvqw";
 
@@ -33,13 +34,16 @@ const Dashboard = () => {
         </Link>
       </div>
 
-      {loading && <p>Loading subscriptions...</p>}
+      {loading && (
+        <div className="flex justify-center items-center h-[60vh]">
+          <Loader2 className="h-8 w-8 text-primary animate-spin" />
+        </div>
+      )}
       {error && <p className="text-red-500">Error: {error}</p>}
 
       {!loading && !error && (
         <>
           <div className="relative min-h-screen rounded-3xl">
-       
             {/* Stats Overview */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
               <Card>
@@ -68,7 +72,7 @@ const Dashboard = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold text-foreground">
-                    ${totalMonthly.toFixed(2)}
+                    {totalMonthly.toFixed(2)} MAS
                   </div>
                   <p className="text-xs text-muted-foreground">Per month</p>
                 </CardContent>
@@ -86,7 +90,12 @@ const Dashboard = () => {
                     {upcomingPayments.length
                       ? new Date(
                           upcomingPayments[0].nextPayment
-                        ).toLocaleDateString()
+                        ).toLocaleDateString("en-GB", {
+                          timeZone: "UTC",
+                          day: "2-digit",
+                          month: "short",
+                          year: "numeric",
+                        })
                       : "-"}
                   </div>
                   <p className="text-xs text-muted-foreground">Next due</p>
@@ -101,9 +110,6 @@ const Dashboard = () => {
                   <h2 className="text-xl font-semibold text-foreground">
                     Your Subscriptions
                   </h2>
-                  <Button variant="outline" size="sm">
-                    Filter
-                  </Button>
                 </div>
 
                 <div className="space-y-4">
@@ -141,10 +147,10 @@ const Dashboard = () => {
 
               {/* Upcoming Payments */}
               <div className="space-y-6">
-                <h2 className="text-xl font-semibold text-foreground">
+                <h2 className="text-xl font-semibold text-foreground hidden">
                   Upcoming Payments
                 </h2>
-                <Card>
+                <Card className="hidden">
                   <CardHeader>
                     <CardTitle className="text-base">Next 7 Days</CardTitle>
                   </CardHeader>
@@ -173,7 +179,7 @@ const Dashboard = () => {
                   </CardContent>
                 </Card>
 
-                <Card className="bg-muted/30">
+                <Card className="border">
                   <CardContent className="p-6">
                     <h3 className="font-semibold text-foreground mb-2">
                       Need Help?

@@ -10,7 +10,7 @@ import { ModeToggle } from "./ThemeToggle";
 
 export const Header = () => {
   return (
-    <header className="fixed top-0 left-0 right-0 z-0 bg-card backdrop-blur-md pr-24  shadow-sm">
+    <header className="fixed top-0 left-0 right-0 z-5 bg-card backdrop-blur-md pr-24  shadow-sm">
       <div className="container mx-auto px-6 py-4">
         <div className="flex justify-between items-start">
           {/* Left: Logo + NavigationMenu (stacked vertically) */}
