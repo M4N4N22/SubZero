@@ -24,7 +24,7 @@ type Plan = {
   amount: string;
 };
 
-const SC_ADDRESS = "AS1g86F28S7N8GQ33oysd8wm6SSmNMyZxhgLJVybxLc44bM9Bvqw";
+const SC_ADDRESS = "AS1bCYyESnNPJKRXrdC6AU3jwwEBsHWEPmqvWVEAYYATuSWNHDNJ";
 
 export default function ViewPlans({
   creatorAddress,

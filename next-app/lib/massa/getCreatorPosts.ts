@@ -26,7 +26,7 @@ export const getCreatorPosts = async (creatorAddress?: string): Promise<string[]
     // 2️⃣ Initialize smart contract instance
     const contract = new SmartContract(
       provider,
-      "AS1g86F28S7N8GQ33oysd8wm6SSmNMyZxhgLJVybxLc44bM9Bvqw" // replace with your deployed address
+      "AS1bCYyESnNPJKRXrdC6AU3jwwEBsHWEPmqvWVEAYYATuSWNHDNJ" // replace with your deployed address
     );
 
     // 3️⃣ Prepare args and call read

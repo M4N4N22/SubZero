@@ -7,7 +7,7 @@ import Link from "next/link";
 import { useMySubscriptions } from "@/lib/massa/useMySubscriptions";
 import { Loader2 } from "lucide-react";
 
-const SC_ADDRESS = "AS1g86F28S7N8GQ33oysd8wm6SSmNMyZxhgLJVybxLc44bM9Bvqw";
+const SC_ADDRESS = "AS1bCYyESnNPJKRXrdC6AU3jwwEBsHWEPmqvWVEAYYATuSWNHDNJ";
 
 const Dashboard = () => {
   const { subscriptions, totalMonthly, upcomingPayments, loading, error } =
@@ -16,7 +16,7 @@ const Dashboard = () => {
   const activeSubscriptions = subscriptions.filter((sub) => !sub.paused);
 
   return (
-    <div className="min-h-screen container mx-auto p-4">
+    <div className="min-h-screen container mx-auto ">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 space-y-4 sm:space-y-0">
         <div>

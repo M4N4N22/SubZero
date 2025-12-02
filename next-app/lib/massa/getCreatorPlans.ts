@@ -16,14 +16,14 @@ export const getCreatorPlans = async (
 ): Promise<CreatorPlan[]> => {
   console.log("🔌 Checking Bearby connection...");
   if (!web3.wallet.connected) {
-    throw new Error("❌ Bearby wallet is not connected");
+    throw new Error("Bearby wallet is not connected");
   }
 
   const addressNormalized = creatorAddress.toLowerCase();
   console.log("📡 Sending SC read request for creator:", addressNormalized);
 
   const response = await web3.contract.readSmartContract({
-    targetAddress: "AS1g86F28S7N8GQ33oysd8wm6SSmNMyZxhgLJVybxLc44bM9Bvqw",
+    targetAddress: "AS1bCYyESnNPJKRXrdC6AU3jwwEBsHWEPmqvWVEAYYATuSWNHDNJ",
     targetFunction: "getPlansByCreator",
     parameter: [
       {
@@ -37,31 +37,31 @@ export const getCreatorPlans = async (
 
   const rpcResult = response?.[0];
   if (!rpcResult || !rpcResult.result || !Array.isArray(rpcResult.result)) {
-    throw new Error("❌ Invalid RPC response format");
+    throw new Error("Invalid RPC response format");
   }
 
   const scResult = rpcResult.result[0];
-  console.log("📦 Raw SC result:", scResult);
+  console.log("Raw SC result:", scResult);
 
   const result = scResult.result as { Ok?: number[]; Error?: string };
 
   if (result.Error) {
-    throw new Error(`⚠️ Smart contract error: ${result.Error}`);
+    throw new Error(`Smart contract error: ${result.Error}`);
   }
 
   if (!result.Ok || result.Ok.length === 0) {
-    console.warn("⚠️ Smart contract response is OK but empty");
+    console.warn("Smart contract response is OK but empty");
     return [];
   }
 
   const buffer = Uint8Array.from(result.Ok);
-  console.log("🧩 Raw SC buffer length:", buffer.length);
+  console.log("Raw SC buffer length:", buffer.length);
 
   // Log each byte in hex for debugging
   const bufferHex = Array.from(buffer)
     .map((b) => b.toString(16).padStart(2, "0"))
     .join(" ");
-  console.log("🔍 SC buffer hex dump:", bufferHex);
+  console.log("SC buffer hex dump:", bufferHex);
 
   const args = new Args(buffer);
   const plans: CreatorPlan[] = [];
@@ -85,14 +85,14 @@ export const getCreatorPlans = async (
         createdAt: "", // not returned by SC
       });
 
-      console.log(`✅ Plan[${planIndex}] decoded:`, plans[planIndex]);
+      console.log(`Plan[${planIndex}] decoded:`, plans[planIndex]);
       planIndex++;
     } catch (err) {
-      console.log("✅ Finished reading buffer / no more plans to decode");
+      console.log("Finished reading buffer / no more plans to decode");
       break;
     }
   }
 
-  console.log("🎯 Total plans fetched:", plans.length);
+  console.log("Total plans fetched:", plans.length);
   return plans;
 };

@@ -125,7 +125,7 @@ export function useMySubscriptions(scAddress: string) {
           return next > now && next <= in7Days && !s.paused;
         });
 
-        // ✅ If none due in next 7 days, fallback to the soonest
+        // If none due in next 7 days, fallback to the soonest
         if (upcoming.length === 0 && subs.length > 0) {
           upcoming = [...subs]
             .filter((s) => !s.paused)

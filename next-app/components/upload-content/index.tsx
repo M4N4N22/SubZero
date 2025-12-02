@@ -151,7 +151,7 @@ export default function UploadContent() {
   };
 
   return (
-    <div className="min-h-screen py-10">
+    <div className="min-h-screen ">
       <div className="container mx-auto max-w-6xl">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-foreground">
@@ -300,7 +300,7 @@ export default function UploadContent() {
                       )}
                     </>
                   ) : (
-                    <div className="w-full h-56 flex items-center justify-center border border-dashed border-muted rounded-lg mb-4 text-muted-foreground">
+                    <div className="w-full h-56 flex items-center justify-center border border-dashed border-primary rounded-3xl mb-4 text-muted-foreground">
                       Media Preview
                     </div>
                   )}

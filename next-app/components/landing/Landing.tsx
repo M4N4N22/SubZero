@@ -1,6 +1,19 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import Link from "next/link";
+import {
+  ArrowRight,
+  Shield,
+  Brain,
+  Zap,
+  Star,
+  Database,
+  Lock,
+  Network,
+  Binary,
+  HardDrive,
+  ServerCog,
+} from "lucide-react";
 
 const Landing = () => {
   const features = [
@@ -39,13 +52,88 @@ const Landing = () => {
 
   return (
     <div className="min-h-screen">
+      <div className="absolute inset-0 bg-gradient-to-b from-primary/90 via-background  dark:from-primary/50 dark:via-primary/30 dark:to-primary/50"></div>
+
+      <div className="absolute inset-0 overflow-hidden opacity-10 z-0">
+        <Database
+          className="absolute w-8 h-8 text-white top-20 left-[10%] animate-pulse"
+          style={{ animationDelay: "0s", animationDuration: "3s" }}
+        />
+        <ServerCog
+          className="absolute w-10 h-10 text-white top-40 right-[15%] animate-pulse"
+          style={{ animationDelay: "0.5s", animationDuration: "4s" }}
+        />
+        <Lock
+          className="absolute w-6 h-6 text-white bottom-32 left-[20%] animate-pulse"
+          style={{ animationDelay: "1s", animationDuration: "3.5s" }}
+        />
+        <Database
+          className="absolute w-12 h-12 text-white top-[60%] right-[25%] animate-pulse"
+          style={{ animationDelay: "1.5s", animationDuration: "4.5s" }}
+        />
+        <HardDrive
+          className="absolute w-7 h-7 text-white bottom-[20%] right-[10%] animate-pulse"
+          style={{ animationDelay: "2s", animationDuration: "3s" }}
+        />
+        <ServerCog
+          className="absolute w-9 h-9 text-white top-[30%] left-[5%] animate-pulse"
+          style={{ animationDelay: "2.5s", animationDuration: "5s" }}
+        />
+        <Database
+          className="absolute w-6 h-6 text-white bottom-40 right-[30%] animate-pulse"
+          style={{ animationDelay: "3s", animationDuration: "3.5s" }}
+        />
+        <ServerCog
+          className="absolute w-8 h-8 text-white top-[50%] left-[30%] animate-pulse"
+          style={{ animationDelay: "3.5s", animationDuration: "4s" }}
+        />
+      </div>
+
+      <div className="absolute inset-0 backdrop-blur-3xl dark:bg-white/5 bg-black/5"></div>
+
+      <div className="absolute inset-0 overflow-hidden opacity-10">
+        <div
+          className="absolute w-2 h-2 bg-white rounded-full top-[15%] left-[12%] animate-ping"
+          style={{ animationDuration: "2s" }}
+        ></div>
+        <div
+          className="absolute w-3 h-3 bg-white rounded-full top-[25%] right-[18%] animate-ping"
+          style={{ animationDuration: "3s", animationDelay: "0.5s" }}
+        ></div>
+        <div
+          className="absolute w-2 h-2 bg-white rounded-full bottom-[30%] left-[8%] animate-ping"
+          style={{ animationDuration: "2.5s", animationDelay: "1s" }}
+        ></div>
+        <div
+          className="absolute w-3 h-3 bg-white rounded-full top-[70%] right-[12%] animate-ping"
+          style={{ animationDuration: "3.5s", animationDelay: "1.5s" }}
+        ></div>
+        <div
+          className="absolute w-2 h-2 bg-white rounded-full top-[45%] left-[15%] animate-ping"
+          style={{ animationDuration: "2s", animationDelay: "2s" }}
+        ></div>
+        <div
+          className="absolute w-3 h-3 bg-white rounded-full bottom-[45%] right-[20%] animate-ping"
+          style={{ animationDuration: "3s", animationDelay: "2.5s" }}
+        ></div>
+      </div>
+
+      <div
+        className="absolute inset-0 opacity-5"
+        style={{
+          backgroundImage:
+            "linear-gradient(white 1px, transparent 1px), linear-gradient(90deg, white 1px, transparent 1px)",
+          backgroundSize: "50px 50px",
+        }}
+      ></div>
+
       {/* Hero Section */}
-      <section className="relative overflow-hidden  pt-40 pb-16">
+      <section className="relative overflow-hidden  pt-56 pb-16">
         <div className="container mx-auto px-4 text-center">
-          <div className="mx-auto max-w-4xl space-y-6">
-            <h1 className="text-5xl font-semibold tracking-tight text-foreground sm:text-6xl lg:text-7xl">
+          <div className="mx-auto  space-y-6">
+            <h1 className="text-5xl font-semibold tracking-tighter text-foreground sm:text-6xl lg:text-8xl">
               Web3{" "}
-              <span className=" text-transparent bg-clip-text bg-gradient-to-bl from-primary to-blue-500">
+              <span className=" text-primary">
                 Subscriptions
               </span>{" "}
               <span className="text-foreground/50 font-normal">for</span> <br />
@@ -59,9 +147,9 @@ const Landing = () => {
               Subscribe to your favorite services or earn by creating autonomous
               plans. All trustless. All on-chain.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-6">
-              <Link href="/creator/dashboard">
-                <Button variant="default" size="lg" className="min-w-[200px]">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center ">
+              <Link href="/discover">
+                <Button variant="default" size="lg" className="min-w-[300px] p-6 rounded-full text-lg">
                   Get Started
                 </Button>
               </Link>
@@ -71,7 +159,7 @@ const Landing = () => {
       </section>
 
       {/* Features Section */}
-      <section className="py-20 bg-background">
+      <section className="py-44 bg-background">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-3xl font-bold text-foreground mb-4">
@@ -83,7 +171,7 @@ const Landing = () => {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid md:grid-cols-2 lg:grid-cols-2 gap-3 w-3/4 mx-auto">
             {features.map((feature, index) => (
               <Card key={index} className="hover-lift">
                 <CardContent className="p-6 text-center">
@@ -102,7 +190,7 @@ const Landing = () => {
       </section>
 
       {/* Stats Section */}
-      <section className="py-16 bg-muted/30">
+      <section className="py-16 bg-card">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
             {stats.map((stat, index) => (
@@ -124,7 +212,8 @@ const Landing = () => {
         <div className="container mx-auto px-4 text-center">
           <div className="max-w-3xl mx-auto space-y-6">
             <h2 className="text-3xl lg:text-4xl font-bold">
-              Whether you&apos;re a Provider or a Consumer — SubZero has you covered.
+              Whether you&apos;re a Provider or a Consumer — SubZero has you
+              covered.
             </h2>
             <p className="text-lg text-primary-foreground/80">
               Power your recurring payments with unstoppable smart contracts.

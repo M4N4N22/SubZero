@@ -56,7 +56,7 @@ export default function CreatorCard({ address, refresh }: CreatorCardProps) {
         // --- 2️⃣ Initialize Profile Contract (latest one) ---
         const profileContract = new SmartContract(
           provider,
-          "AS1g86F28S7N8GQ33oysd8wm6SSmNMyZxhgLJVybxLc44bM9Bvqw"
+          "AS1bCYyESnNPJKRXrdC6AU3jwwEBsHWEPmqvWVEAYYATuSWNHDNJ"
         );
 
         // --- 3️⃣ Fetch creator profile CID from contract ---
@@ -92,7 +92,7 @@ export default function CreatorCard({ address, refresh }: CreatorCardProps) {
         // --- 5️⃣ Fetch posts (if any) ---
         const postsContract = new SmartContract(
           provider,
-          "AS1g86F28S7N8GQ33oysd8wm6SSmNMyZxhgLJVybxLc44bM9Bvqw"
+          "AS1bCYyESnNPJKRXrdC6AU3jwwEBsHWEPmqvWVEAYYATuSWNHDNJ"
         );
 
         const contentRes = await postsContract.read(
@@ -132,7 +132,7 @@ export default function CreatorCard({ address, refresh }: CreatorCardProps) {
         try {
           const subsContract = new SmartContract(
             provider,
-            "AS1g86F28S7N8GQ33oysd8wm6SSmNMyZxhgLJVybxLc44bM9Bvqw" // subscription contract
+            "AS1bCYyESnNPJKRXrdC6AU3jwwEBsHWEPmqvWVEAYYATuSWNHDNJ" // subscription contract
           );
 
           // 1️⃣ Fetch all plans created by this address

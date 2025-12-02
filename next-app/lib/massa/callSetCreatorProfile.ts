@@ -23,7 +23,7 @@ export const callSetCreatorProfile = async (cid: string) => {
   // Initialize the contract
   const contract = new SmartContract(
     provider,
-    "AS1g86F28S7N8GQ33oysd8wm6SSmNMyZxhgLJVybxLc44bM9Bvqw" // your deployed address
+    "AS1bCYyESnNPJKRXrdC6AU3jwwEBsHWEPmqvWVEAYYATuSWNHDNJ" // your deployed address
   );
 
   console.log("🔗 Smart contract initialized:", contract.address);
