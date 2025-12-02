@@ -1,4 +1,15 @@
-import { Storage, Context, generateEvent } from '@massalabs/massa-as-sdk';
+import {
+  Storage,
+  Context,
+  generateEvent,
+  findCheapestSlot,
+  deferredCallCancel,
+  deferredCallRegister,
+  currentPeriod,
+  Slot,
+  Address,
+  transferCoins,
+} from '@massalabs/massa-as-sdk';
 import { Args, stringToBytes } from '@massalabs/as-types';
 
 export function createPlan(binaryArgs: StaticArray<u8>): void {
@@ -24,7 +35,7 @@ export function createPlan(binaryArgs: StaticArray<u8>): void {
   const countKey = 'creatorPlanCount:' + creator;
   const prefix = 'creatorPlan:' + creator + ':';
 
-  // ✅ Check if the count key exists before reading
+  // Check if the count key exists before reading
   let count: i32 = 0;
   if (Storage.has(countKey)) {
     const countStr = Storage.get(countKey);
@@ -114,6 +125,134 @@ export function getPlanById(args: StaticArray<u8>): StaticArray<u8> {
   return encoded.serialize();
 }
 
+// ------------------ RECURRING BILLING HELPERS ------------------
+
+// Map plan frequency string to a rough period offset.
+// Tune values based on real chain timing if needed.
+function frequencyToPeriodOffset(freq: string): u64 {
+  const f = freq.toLowerCase();
+
+  if (f == 'daily') return 200; // stable
+  if (f == 'weekly') return 1400; // stable
+  if (f == 'monthly') return 6000; // safe & widely used
+
+  return 200;
+}
+
+function deferredStorageKey(planId: string, subscriber: string): string {
+  return 'deferred:' + planId + ':' + subscriber.toLowerCase();
+}
+
+/**
+ * Compute the next billing Slot using findCheapestSlot from the SDK.
+ * Uses a window [currentPeriod + offset, currentPeriod + offset + 20].
+ */
+function computeNextBillingSlot(frequency: string): Slot {
+  const offset: u64 = frequencyToPeriodOffset(frequency);
+  const current: u64 = currentPeriod();
+
+  const start: u64 = current + offset;
+  const end: u64 = start + 200; // larger safe buffer
+
+  const maxGas: u64 = 3_000_000; // reduced – safer
+
+  let slot = findCheapestSlot(start, end, maxGas, 0);
+
+  // safety fallback
+  if (slot.period <= current) {
+    slot = new Slot(current + 200, 0);
+  }
+
+  return slot;
+}
+
+/**
+ * Schedule the next recurring payment for (planId, subscriber)
+ * using deferredCallRegister to call processRecurringPayment.
+ */
+function scheduleNextPayment(planId: string, subscriber: string): void {
+  const planKey = 'plan:' + planId;
+  if (!Storage.has(planKey)) return;
+
+  const planData = Storage.get(planKey).split('|');
+  if (planData.length < 5) return;
+
+  const frequency = planData[4];
+
+  const slot = computeNextBillingSlot(frequency);
+
+  // Encode (planId, subscriber) as params
+  const params = new Args()
+    .add(planId)
+    .add(subscriber.toLowerCase())
+    .serialize();
+
+  const maxGas: u64 = 3_000_000;
+
+  const id = deferredCallRegister(
+    Context.callee().toString(), // call this contract
+    'processRecurringPayment',
+    slot,
+    maxGas,
+    params,
+    0, // coins provided at execution (not booking fee)
+  );
+
+  Storage.set(deferredStorageKey(planId, subscriber), id);
+}
+
+/**
+ * Cancel an existing scheduled deferred call for (planId, subscriber)
+ */
+function cancelScheduledPayment(planId: string, subscriber: string): void {
+  const key = deferredStorageKey(planId, subscriber);
+  if (!Storage.has(key)) return;
+
+  const id = Storage.get(key);
+  deferredCallCancel(id);
+  Storage.deleteOf(Context.callee(), key);
+}
+
+/**
+ * Allow creators to withdraw from their accumulated earnings.
+ *
+ * Args:
+ *  - amount: string (MAS expressed as micro-MAS string)
+ */
+export function withdrawEarnings(binaryArgs: StaticArray<u8>): void {
+  const args = new Args(binaryArgs);
+  const amountStr = args.nextString().expect('Missing amount');
+
+  const creator = Context.caller().toString().toLowerCase();
+  const key = creatorBalanceKey(creator);
+
+  if (!Storage.has(key)) {
+    throw new Error('No balance available');
+  }
+
+  let current: u64 = U64.parseInt(Storage.get(key));
+  const amount: u64 = U64.parseInt(amountStr);
+
+  if (amount > current) {
+    throw new Error('Insufficient balance');
+  }
+
+  // Update balance
+  const updated = current - amount;
+  Storage.set(key, updated.toString());
+
+  // Transfer coins from contract → creator wallet
+  const creatorAddr = new Address(creator);
+  transferCoins(creatorAddr, <i64>amount);
+
+  // Record in history
+  recordWithdrawal(creator, amount);
+
+  generateEvent(`Withdraw:${creator}:${amountStr}`);
+}
+
+// ------------------ SUBSCRIPTION MANAGEMENT ------------------
+
 /**
  * Subscribe a user to a creator's plan.
  *
@@ -160,6 +299,10 @@ export function manageSubscription(binaryArgs: StaticArray<u8>): void {
     const transferred: u64 = Context.transferredCoins();
     if (transferred < amountU64) throw new Error('Insufficient MAS sent');
 
+    // NOTE:
+    // transferred MAS is now held by this contract.
+    // Recurring payouts will be sent over time via processRecurringPayment.
+
     // Add subscription
     subscribers.push(subscriber);
     userSubs.push(planId);
@@ -167,6 +310,17 @@ export function manageSubscription(binaryArgs: StaticArray<u8>): void {
     Storage.set(subscribersKey, subscribers.join('|'));
     Storage.set(userKey, userSubs.join('|'));
     Storage.set(timestampKey, Context.timestamp().toString());
+
+    // Clear any previous pause flag
+    if (Storage.has(pausedKey)) {
+      Storage.deleteOf(Context.callee(), pausedKey);
+    }
+
+    //initial earning to creator
+    addCreatorEarnings(creator, amountU64);
+
+    // Schedule first recurring payment
+    scheduleNextPayment(planId, subscriber);
 
     generateEvent(`Subscribed:${planId}:${subscriber}`);
   } else if (action == 'pause') {
@@ -180,36 +334,140 @@ export function manageSubscription(binaryArgs: StaticArray<u8>): void {
     if (!found) throw new Error('Not subscribed');
 
     Storage.set(pausedKey, 'true');
+
+    // Optionally stop future scheduled billing immediately
+    cancelScheduledPayment(planId, subscriber);
+
     generateEvent(`Paused:${planId}:${subscriber}`);
   } else if (action == 'cancel') {
     let found = false;
     let newSubscribers = new Array<string>();
+
     for (let i = 0; i < subscribers.length; i++) {
-      if (subscribers[i] != subscriber) newSubscribers.push(subscribers[i]);
-      else found = true;
+      if (subscribers[i] != subscriber) {
+        newSubscribers.push(subscribers[i]);
+      } else {
+        found = true;
+      }
     }
     if (!found) throw new Error('Not subscribed');
 
-    subscribers = newSubscribers;
-    Storage.set(subscribersKey, subscribers.join('|'));
+    // Update subscriber list
+    if (newSubscribers.length == 0) {
+      Storage.set(subscribersKey, '');
+    } else {
+      Storage.set(subscribersKey, newSubscribers.join('|'));
+    }
 
-    // Update user subscriptions
+    // Update user subscription list
     let newUserSubs = new Array<string>();
     for (let i = 0; i < userSubs.length; i++) {
-      if (userSubs[i] != planId) newUserSubs.push(userSubs[i]);
+      if (userSubs[i] != planId) {
+        newUserSubs.push(userSubs[i]);
+      }
     }
-    userSubs = newUserSubs;
-    Storage.set(userKey, userSubs.join('|'));
 
-    // Remove paused/timestamp keys
+    if (newUserSubs.length == 0) {
+      Storage.set(userKey, '');
+    } else {
+      Storage.set(userKey, newUserSubs.join('|'));
+    }
+
+    // Remove user pause + timestamp keys
     Storage.deleteOf(Context.callee(), pausedKey);
     Storage.deleteOf(Context.callee(), timestampKey);
 
-    generateEvent(`Canceled:${planId}:${subscriber}`);
+    // Cancel scheduled billing
+    cancelScheduledPayment(planId, subscriber);
   } else {
     throw new Error('Invalid action: ' + action);
   }
 }
+
+// ------------------ AUTONOMOUS RECURRING PAYMENT ------------------
+
+/**
+ * Process a recurring payment for a subscriber on a plan.
+ *
+ * Called automatically by Massa via deferredCallRegister.
+ *
+ * Args expected:
+ *  - planId: string
+ *  - subscriber: string
+ */
+export function processRecurringPayment(binaryArgs: StaticArray<u8>): void {
+  const args = new Args(binaryArgs);
+  const planId = args.nextString().expect('Missing planId');
+  const subscriber = args
+    .nextString()
+    .expect('Missing subscriber')
+    .toLowerCase();
+
+  const planKey = 'plan:' + planId;
+  if (!Storage.has(planKey)) {
+    // Plan no longer exists; stop future scheduling.
+    cancelScheduledPayment(planId, subscriber);
+    return;
+  }
+
+  const planData = Storage.get(planKey).split('|');
+  if (planData.length < 6) {
+    cancelScheduledPayment(planId, subscriber);
+    return;
+  }
+
+  const amountStr = planData[3];
+  const frequency = planData[4];
+  const creator = planData[5];
+
+  const amountU64 = <u64>(parseFloat(amountStr) * 1_000_000); // micro-MAS
+
+  const subscribersKey = 'planSubscribers:' + planId;
+  if (!Storage.has(subscribersKey)) {
+    cancelScheduledPayment(planId, subscriber);
+    return;
+  }
+
+  const subs = Storage.get(subscribersKey).split('|');
+  let stillSubscribed = false;
+  for (let i = 0; i < subs.length; i++) {
+    if (subs[i] == subscriber) {
+      stillSubscribed = true;
+      break;
+    }
+  }
+
+  if (!stillSubscribed) {
+    // user canceled; nothing more to do.
+    cancelScheduledPayment(planId, subscriber);
+    return;
+  }
+
+  // Respect pause flag
+  const pausedKey = 'planSubscriberPaused:' + planId + ':' + subscriber;
+  if (Storage.has(pausedKey) && Storage.get(pausedKey) == 'true') {
+    cancelScheduledPayment(planId, subscriber);
+    return;
+  }
+
+  // Attempt payout from contract balance to creator
+  const creatorAddr = new Address(creator);
+  transferCoins(creatorAddr, <i64>amountU64);
+
+  // Track earnings
+  addCreatorEarnings(creator, amountU64);
+
+  // Update last charge timestamp
+  const timestampKey = 'planSubscriberDate:' + planId + ':' + subscriber;
+  Storage.set(timestampKey, Context.timestamp().toString());
+
+  generateEvent(`RecurringPayment:${planId}:${subscriber}:${amountStr}`);
+
+  // Schedule next cycle
+  scheduleNextPayment(planId, subscriber);
+}
+
+// ------------------ VIEWS ------------------
 
 export function getSubscribers(argsData: StaticArray<u8>): StaticArray<u8> {
   const args = new Args(argsData);
@@ -218,7 +476,7 @@ export function getSubscribers(argsData: StaticArray<u8>): StaticArray<u8> {
   const key = 'planSubscribers:' + planId;
   const subs = Storage.has(key) ? Storage.get(key) : '';
 
-  return stringToBytes(subs); //string to StaticArray<u8>
+  return stringToBytes(subs); // string to StaticArray<u8>
 }
 
 export function getUserSubscriptions(
@@ -257,6 +515,69 @@ export function getSubscriberTimestamp(
   const key = 'planSubscriberDate:' + planId + ':' + user;
   const ts = Storage.has(key) ? Storage.get(key) : '';
   return stringToBytes(ts);
+}
+
+export function getCreatorBalance(argsData: StaticArray<u8>): StaticArray<u8> {
+  const args = new Args(argsData);
+
+  const creator = args.nextString().expect('Missing creator').toLowerCase();
+  const key = creatorBalanceKey(creator);
+
+  const balance = Storage.has(key) ? Storage.get(key) : '0';
+  return stringToBytes(balance);
+}
+
+export function getWithdrawalHistory(
+  argsData: StaticArray<u8>,
+): StaticArray<u8> {
+  const args = new Args(argsData);
+
+  const creator = args.nextString().expect('Missing creator').toLowerCase();
+  const key = withdrawalsKey(creator);
+
+  const history = Storage.has(key) ? Storage.get(key) : '';
+  return stringToBytes(history);
+}
+
+// ------------------ CREATOR BALANCE HELPERS ------------------
+
+function creatorBalanceKey(creator: string): string {
+  return 'creatorBalance:' + creator.toLowerCase();
+}
+
+function withdrawalsKey(creator: string): string {
+  return 'withdrawals:' + creator.toLowerCase();
+}
+
+/**
+ * Add earnings to creator’s balance when a payment is processed.
+ */
+function addCreatorEarnings(creator: string, amount: u64): void {
+  const key = creatorBalanceKey(creator);
+  let current: u64 = 0;
+
+  if (Storage.has(key)) {
+    current = U64.parseInt(Storage.get(key));
+  }
+
+  const updated: u64 = current + amount;
+  Storage.set(key, updated.toString());
+}
+
+/**
+ * Record a withdrawal (for history).
+ */
+function recordWithdrawal(creator: string, amount: u64): void {
+  const key = withdrawalsKey(creator);
+  const ts = Context.timestamp().toString();
+  const record = amount.toString() + ',' + ts;
+
+  if (Storage.has(key)) {
+    const existing = Storage.get(key);
+    Storage.set(key, existing + ';' + record);
+  } else {
+    Storage.set(key, record);
+  }
 }
 
 // -------------------------------

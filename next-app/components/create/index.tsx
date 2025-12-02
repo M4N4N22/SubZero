@@ -36,11 +36,11 @@ const CreatePlan = () => {
   const tokens = [{ value: "MAS", label: "MAS", icon: "" }];
 
   const frequencies = [
+    { label: "Daily (24 hours)", value: "daily" },
     { label: "Weekly (7 days)", value: "weekly" },
     { label: "Monthly (30 days)", value: "monthly" },
-    { label: "Quarterly (90 days)", value: "quarterly" },
-    { label: "Yearly (365 days)", value: "yearly" },
   ];
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 

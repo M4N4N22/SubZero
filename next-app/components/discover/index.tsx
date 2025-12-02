@@ -29,7 +29,7 @@ export default function DiscoverIndex() {
 
         const contract = new SmartContract(
           provider,
-          "AS1g86F28S7N8GQ33oysd8wm6SSmNMyZxhgLJVybxLc44bM9Bvqw"
+          "AS1bCYyESnNPJKRXrdC6AU3jwwEBsHWEPmqvWVEAYYATuSWNHDNJ"
         );
 
         const countRes = await contract.read("getCreatorCount", new Args(), {
@@ -93,7 +93,7 @@ export default function DiscoverIndex() {
   }
 
   return (
-    <div className="px-6 py-10">
+    <div className="">
       <div className="flex justify-between">
         <h1 className="text-3xl font-bold text-foreground mb-6">
           Discover Creators

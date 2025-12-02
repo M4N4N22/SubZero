@@ -23,7 +23,7 @@ export const callAddCreatorContent = async (cid: string) => {
   // Initialize contract (replace with your actual contract address)
   const contract = new SmartContract(
     provider,
-    "AS1g86F28S7N8GQ33oysd8wm6SSmNMyZxhgLJVybxLc44bM9Bvqw"
+    "AS1bCYyESnNPJKRXrdC6AU3jwwEBsHWEPmqvWVEAYYATuSWNHDNJ"
   );
 
   console.log("🔗 Smart contract initialized:", contract.address);

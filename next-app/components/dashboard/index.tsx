@@ -9,6 +9,7 @@ import Link from "next/link";
 import { toast } from "sonner";
 import CreatorProfile from "../creator-profile";
 import CreatorInsights from "../creator-insights";
+import { useRouter } from "next/navigation";
 
 type CreatorPlan = {
   planId: string;
@@ -21,6 +22,7 @@ type CreatorPlan = {
 };
 
 const CreatorDashboard = () => {
+  const router = useRouter();
   const { connected, address } = useBearby();
   const [createdPlans, setCreatedPlans] = useState<CreatorPlan[]>([]);
   const [loading, setLoading] = useState(true);
@@ -57,7 +59,7 @@ const CreatorDashboard = () => {
         <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center">
           <div>
             <h1 className="text-3xl font-semibold text-foreground mb-1">
-             Dashboard
+              Dashboard
             </h1>
             <p className="text-muted-foreground">
               Manage and track your subscription plans
@@ -65,15 +67,18 @@ const CreatorDashboard = () => {
           </div>
 
           <div className="flex items-center gap-2">
-            <Link href="/create">
+            <Link href="/creator/create">
               <Button>Create New Plan</Button>
             </Link>
-            <Button variant="outline" onClick={handleWithdraw}>
+            <Button
+              variant="outline"
+              onClick={() => router.push("/creator/monetization")}
+            >
               Withdraw
             </Button>
           </div>
         </div>
-        <CreatorProfile />({address && <CreatorInsights address={address} />})
+        <CreatorProfile />{address && <CreatorInsights address={address} />}
         {loading ? (
           <div className="text-muted-foreground text-center">
             Loading plans...

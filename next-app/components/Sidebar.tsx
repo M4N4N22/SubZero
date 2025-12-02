@@ -37,7 +37,7 @@ export default function Sidebar() {
           name: "Monetization",
           href: "/creator/monetization",
           icon: DollarSign,
-          comingSoon: true,
+         
         },
       ],
     },

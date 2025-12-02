@@ -25,7 +25,7 @@ export const getCreatorProfile = async (refresh: boolean = false) => {
     // Step 2: Initialize contract
     const contract = new SmartContract(
       provider,
-      "AS1g86F28S7N8GQ33oysd8wm6SSmNMyZxhgLJVybxLc44bM9Bvqw" // Contract address
+      "AS1bCYyESnNPJKRXrdC6AU3jwwEBsHWEPmqvWVEAYYATuSWNHDNJ" // Contract address
     );
 
     console.log(" Reading from contract:", contract.address);

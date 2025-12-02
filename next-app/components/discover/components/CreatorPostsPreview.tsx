@@ -38,7 +38,7 @@ export default function CreatorPostsPreview({ posts }: { posts: Post[] }) {
               alt={p.title}
               width={200}
               height={200}
-              className="object-cover h-28 w-full blur-sm group-hover:blur-none transition-all"
+              className="object-cover h-28 w-full blur-sm  transition-all"
             />
             <div className="absolute inset-0 bg-black/70 flex font-semibold items-center justify-center opacity-0 group-hover:opacity-100 text-xs text-white text-center p-1 transition-all">
               {p.title}

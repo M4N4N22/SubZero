@@ -34,7 +34,7 @@ export type CreatorInsights = {
   earningsGraph: { date: string; revenue: number }[];
 };
 
-const CONTRACT_ADDR = "AS1g86F28S7N8GQ33oysd8wm6SSmNMyZxhgLJVybxLc44bM9Bvqw";
+const CONTRACT_ADDR = "AS1bCYyESnNPJKRXrdC6AU3jwwEBsHWEPmqvWVEAYYATuSWNHDNJ";
 
 /** Helper to decode string from contract bytes */
 function decodeString(bytes: number[]) {
