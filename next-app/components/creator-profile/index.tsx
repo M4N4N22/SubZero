@@ -84,7 +84,7 @@ const CreatorProfile = () => {
             <div className="flex justify-between items-start">
               {/* MAIN PROFILE AREA */}
               {refreshing && !profile ? (
-                // 🔄 LOADING STATE
+                // LOADING STATE
                 <div className="flex flex-col items-center justify-center w-full py-16 text-center gap-4 text-primary">
                   <RotateCcw className="h-6 w-6 animate-spin mb-2" />
                   <p className="text-sm font-medium">Loading profile...</p>

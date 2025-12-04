@@ -105,7 +105,7 @@ export default function DiscoverIndex() {
           />
         </Button>
       </div>
-      <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-2">
         {creatorAddresses.map((address) => (
           <Card key={address}>
             <CreatorCard address={address} refresh={refresh} />
