@@ -37,14 +37,13 @@ export const Header = () => {
             <WalletButton />
 
             {/* Creator Mode Toggle */}
-            <div className="flex items-center gap-2 border py-2 px-4 rounded-full bg-foreground/5">
-              <span className="text-sm text-foreground font-medium ">
-                Creator Mode
+            <div
+              className="flex text-foreground items-center gap-2 border py-2 px-4 rounded-full bg-foreground/5 cursor-pointer hover:bg-primary hover:text-primary-foreground  transition"
+              onClick={() => window.open("/creator/dashboard", "_blank")}
+            >
+              <span className="text-sm font-medium">
+                Creator Dashboard
               </span>
-              <Switch
-                checked={creatorMode}
-                onCheckedChange={(v) => setCreatorMode(v)}
-              />
             </div>
           </div>
         </div>

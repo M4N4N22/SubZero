@@ -25,23 +25,21 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           fontSans.variable
         )}
       >
-        <CreatorModeProvider>
-          <SidebarProvider>
-            <QueryProvider>
-              <TooltipProvider>
-                <Toaster richColors position="bottom-right" />
-                <ThemeProvider
-                  attribute="class"
-                  defaultTheme="system"
-                  enableSystem
-                  disableTransitionOnChange
-                >
-                  {children}
-                </ThemeProvider>
-              </TooltipProvider>
-            </QueryProvider>
-          </SidebarProvider>
-        </CreatorModeProvider>
+        <SidebarProvider>
+          <QueryProvider>
+            <TooltipProvider>
+              <Toaster richColors position="bottom-right" />
+              <ThemeProvider
+                attribute="class"
+                defaultTheme="system"
+                enableSystem
+                disableTransitionOnChange
+              >
+                {children}
+              </ThemeProvider>
+            </TooltipProvider>
+          </QueryProvider>
+        </SidebarProvider>
       </body>
     </html>
   );

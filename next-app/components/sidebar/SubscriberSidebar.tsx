@@ -20,12 +20,15 @@ export default function SubscriberSidebar() {
   const { collapsed, toggleSidebar } = useSidebar();
 
   const links = [
-    { name: "Home", href: "/", icon: Home },
-    { name: "Explore", href: "/discover", icon: Compass },
-    { name: "Subscriptions", href: "/subscriptions", icon: CreditCard },
+    { name: "Disocver", href: "/discover", icon: Compass },
     { name: "My Feed", href: "/feed", icon: Rss },
-    { name: "Settings", href: "/settings", icon: Settings },
-    { name: "Help", href: "/help", icon: HelpCircle },
+    { name: "Subscriptions", href: "/subscriptions", icon: CreditCard },
+    {
+      name: "Help",
+      href: "https://github.com/M4N4N22/SubZero",
+      icon: HelpCircle,
+      external: true,
+    },
   ];
 
   return (
@@ -45,8 +48,6 @@ export default function SubscriberSidebar() {
       </button>
 
       <nav className="space-y-4 mt-4">
- 
-
         {links.map((link) => {
           const isActive =
             pathname === link.href || pathname.startsWith(link.href + "/");

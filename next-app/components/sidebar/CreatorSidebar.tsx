@@ -23,11 +23,10 @@ export default function CreatorSidebar() {
   const links = [
     { name: "Dashboard", href: "/creator/dashboard", icon: Home },
     { name: "Profile", href: "/creator/profile", icon: User },
+    { name: "Create Plan", href: "/creator/create", icon: PlusCircle },
     { name: "Upload Content", href: "/creator/upload-content", icon: Upload },
     { name: "My Posts", href: "/creator/my-posts", icon: FileText },
     { name: "Monetization", href: "/creator/monetization", icon: DollarSign },
-    { name: "Create Plan", href: "/creator/create", icon: PlusCircle },
-    { name: "Settings", href: "/creator/settings", icon: Settings },
   ];
 
   return (
@@ -48,7 +47,7 @@ export default function CreatorSidebar() {
 
       <nav className="space-y-4 mt-4">
         {/* Hide title in collapsed state */}
-   
+
         {links.map((link) => {
           const isActive =
             pathname === link.href || pathname.startsWith(link.href + "/");

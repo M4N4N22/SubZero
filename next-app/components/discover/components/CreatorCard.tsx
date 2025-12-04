@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import CreatorProfileMini from "./CreatorProfileMini";
 import CreatorPostsPreview from "./CreatorPostsPreview";
 import { Loader2 } from "lucide-react";
+import Link from "next/link";
 
 interface CreatorCardProps {
   address: string;
@@ -32,11 +33,15 @@ interface CreatorProfileData {
   }[];
   subscribed: boolean;
   createdAt?: string;
+
+  planId: string; // NEW
+  scAddress: string; // NEW
 }
 
 export default function CreatorCard({ address, refresh }: CreatorCardProps) {
   const [data, setData] = useState<CreatorProfileData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isSubscribed, setIsSubscribed] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -128,11 +133,16 @@ export default function CreatorCard({ address, refresh }: CreatorCardProps) {
         }
 
         // --- 6️⃣ Fetch active subscribers (corrected for creator) ---
+        // --- 6️⃣ Fetch active subscribers (corrected for creator) ---
         let activeSubs = 0;
+
+        // ✅ Declare planIds OUTSIDE so it's accessible later
+        let planIds: string[] = [];
+
         try {
           const subsContract = new SmartContract(
             provider,
-            "AS1bCYyESnNPJKRXrdC6AU3jwwEBsHWEPmqvWVEAYYATuSWNHDNJ" // subscription contract
+            "AS1bCYyESnNPJKRXrdC6AU3jwwEBsHWEPmqvWVEAYYATuSWNHDNJ"
           );
 
           // 1️⃣ Fetch all plans created by this address
@@ -142,19 +152,15 @@ export default function CreatorCard({ address, refresh }: CreatorCardProps) {
             { maxGas: BigInt(500_000_000) }
           );
 
-          // Decode to readable string
           const decoded = new TextDecoder()
             .decode(plansRes?.value || new Uint8Array())
             .trim();
 
-          // No plans? -> 0 subscribers
           if (!decoded) {
             console.log("📭 No plans found for creator", address);
           } else {
-            // getPlansByCreator encodes values using Args, not a plain "|" string,
-            // so let’s decode properly using Args API.
+            // Decode using Args API
             const args = new Args(plansRes.value);
-            const planIds: string[] = [];
 
             try {
               while (true) {
@@ -165,52 +171,50 @@ export default function CreatorCard({ address, refresh }: CreatorCardProps) {
                 args.nextString(); // amount
                 planIds.push(planId);
               }
-            } catch (err) {
-              console.warn("Partial decode of plans:", err);
+            } catch {
+              /* decoding done */
             }
-
-            console.log("🧩 Creator plans:", planIds);
-
-            // 2️⃣ Parallel fetch subscriber lists for each plan
-            const subscriberCounts = await Promise.all(
-              planIds.map(async (planId) => {
-                try {
-                  const subsRes = await subsContract.read(
-                    "getSubscribers",
-                    new Args().addString(planId),
-                    { maxGas: BigInt(300_000_000) }
-                  );
-
-                  const subsString = new TextDecoder()
-                    .decode(subsRes?.value || new Uint8Array())
-                    .trim();
-
-                  if (!subsString) return 0;
-
-                  const subsList = subsString
-                    .split("|")
-                    .map((s) => s.trim())
-                    .filter(Boolean);
-
-                  return subsList.length;
-                } catch (err) {
-                  console.warn(
-                    `Error reading subscribers for plan ${planId}:`,
-                    err
-                  );
-                  return 0;
-                }
-              })
-            );
-
-            // 3️⃣ Sum up all subscriber counts
-            activeSubs = subscriberCounts.reduce((sum, c) => sum + c, 0);
           }
 
-          console.log("📊 Active subscribers:", activeSubs);
+          console.log("🧩 Creator plan IDs:", planIds);
+
+          // 2️⃣ Fetch subscribers for each plan
+          const subscriberCounts = await Promise.all(
+            planIds.map(async (planId) => {
+              try {
+                const subsRes = await subsContract.read(
+                  "getSubscribers",
+                  new Args().addString(planId),
+                  { maxGas: BigInt(300_000_000) }
+                );
+
+                const subsString = new TextDecoder()
+                  .decode(subsRes?.value || new Uint8Array())
+                  .trim();
+
+                if (!subsString) return 0;
+
+                const subsList = subsString
+                  .split("|")
+                  .map((s) => s.trim())
+                  .filter(Boolean);
+
+                return subsList.length;
+              } catch {
+                return 0;
+              }
+            })
+          );
+
+          activeSubs = subscriberCounts.reduce((a, b) => a + b, 0);
         } catch (err) {
-          console.warn("⚠️ Error fetching active subscriber count:", err);
+          console.warn("⚠️ Error fetching subscriber count:", err);
         }
+
+        // ✅ Now planIds is always defined
+        const primaryPlanId = planIds[0] || "";
+        const scAddress =
+          "AS1bCYyESnNPJKRXrdC6AU3jwwEBsHWEPmqvWVEAYYATuSWNHDNJ";
 
         // --- 7️⃣ Update component state ---
         setData({
@@ -222,6 +226,8 @@ export default function CreatorCard({ address, refresh }: CreatorCardProps) {
           posts,
           subscribed: false,
           createdAt: meta.createdAt || new Date().toISOString(),
+          planId: primaryPlanId, // NEW
+          scAddress,
         });
       } catch (err) {
         console.error("❌ Error loading creator data:", err);
@@ -253,7 +259,7 @@ export default function CreatorCard({ address, refresh }: CreatorCardProps) {
 
   // --- 🎨 Final Render ---
   return (
-    <CardContent className="p-3 flex flex-col gap-4">
+    <CardContent className="p-4 flex flex-col gap-4">
       <CreatorProfileMini
         name={data.name}
         avatar={data.avatar}
@@ -261,13 +267,24 @@ export default function CreatorCard({ address, refresh }: CreatorCardProps) {
         address={address}
         activeSubs={data.activeSubs}
         socials={data.socials}
+        planId={data.planId} // NEW
+        scAddress={data.scAddress}
+        onSubscriptionStatus={setIsSubscribed}
       />
       <div className="bg-muted p-4 rounded-3xl border ">
-        <span className="text-xs text-foreground/70 ">
+        <span className="text-xs text-foreground/70 flex items-center">
           Latest Posts by{" "}
-          <span className="font-medium text-foreground">{data.name}</span>
+          <span className="font-medium text-foreground ml-1">{data.name}</span>
+          {isSubscribed && (
+            <Link
+              href="/feed"
+              className=" block hover:border-primary text-xs w-fit px-4 ml-auto text-center bg-card text-primary border py-2 rounded-full font-medium hover:opacity-90 transition"
+            >
+              Go to your feed
+            </Link>
+          )}
         </span>
-        <CreatorPostsPreview posts={data.posts} />
+        <CreatorPostsPreview subscribed={isSubscribed} posts={data.posts} />
       </div>
     </CardContent>
   );
